@@ -1,10 +1,28 @@
 import streamlit as st
-import math
+import pandas as pd
 
 st.set_page_config(page_title="폐의약품 처리 안내", layout="centered")
 
 # -----------------------
-# 1. 약물 DB
+# 스타일
+# -----------------------
+st.markdown("""
+<style>
+.main {
+    background-color: #f5f7fb;
+}
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+</style>
+""", unsafe_allow_html=True)
+
+st.title("💊 폐의약품 처리 안내 시스템")
+st.caption("서산시 폐의약품 배출을 쉽게 안내합니다")
+
+# -----------------------
+# 약물 DB
 # -----------------------
 drug_db = {
     "타이레놀": "정제",
@@ -16,17 +34,14 @@ drug_db = {
     "피부연고": "연고"
 }
 
-# -----------------------
-# 2. 처리 방법
-# -----------------------
 disposal = {
-    "정제": "포장(PTP) 제거 후 밀봉 → 폐의약품 수거함 배출",
-    "액체": "휴지 등에 흡수 → 밀봉 후 배출",
-    "연고": "용기 그대로 밀봉 → 수거함 배출"
+    "정제": "포장 제거 후 밀봉하여 폐의약품 수거함 배출",
+    "액체": "휴지 등에 흡수 후 밀봉하여 배출",
+    "연고": "용기째 밀봉하여 배출"
 }
 
 # -----------------------
-# 3. 서산시 수거 기관 DB
+# 서산시 수거 기관
 # -----------------------
 bins = [
     {"name": "서산시 보건소", "type": "보건소", "lat": 36.7833, "lon": 126.4522},
@@ -37,42 +52,32 @@ bins = [
 ]
 
 # -----------------------
-# 4. 거리 계산
+# 입력
 # -----------------------
-def distance(a, b, c, d):
-    return ((a-c)**2 + (b-d)**2)**0.5
-
-def sort_bins(user_lat, user_lon):
-    return sorted(bins, key=lambda x: distance(user_lat, user_lon, x["lat"], x["lon"]))
+drug = st.text_input("💊 약 이름 입력")
 
 # -----------------------
-# 5. UI
-# -----------------------
-st.title("폐의약품 처리 안내")
-
-drug = st.text_input("약 이름 입력")
-
-user_lat = st.number_input("위도", value=36.7833)
-user_lon = st.number_input("경도", value=126.4522)
-
-# -----------------------
-# 6. 결과
+# 결과
 # -----------------------
 if drug:
     st.divider()
 
     if drug in drug_db:
         category = drug_db[drug]
-        st.subheader("처리 방법")
-        st.write(f"분류: {category}")
-        st.write(disposal[category])
+        st.markdown("### 📌 처리 방법")
+        st.info(f"**분류:** {category}\n\n**방법:** {disposal[category]}")
     else:
-        st.warning("DB에 없는 약입니다. (직접 추가 가능)")
+        st.warning("DB에 없는 약입니다")
 
-    st.subheader("서산시 폐의약품 수거 기관")
+    st.markdown("### 📍 수거 기관 위치")
 
-    sorted_list = sort_bins(user_lat, user_lon)
+    # DataFrame 변환 (지도용)
+    df = pd.DataFrame(bins)
 
-    for b in sorted_list:
-        dist = distance(user_lat, user_lon, b["lat"], b["lon"])
-        st.write(f"{b['name']} ({b['type']}) - 거리: {round(dist,3)}")
+    # 지도 출력
+    st.map(df.rename(columns={"lat": "latitude", "lon": "longitude"}))
+
+    # 리스트 출력
+    st.markdown("### 📋 수거 기관 목록")
+    for b in bins:
+        st.success(f"{b['name']} ({b['type']})")
