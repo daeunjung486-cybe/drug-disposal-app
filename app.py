@@ -48,7 +48,7 @@ def sort_bins(user_lat, user_lon):
 # -----------------------
 # 5. UI
 # -----------------------
-st.title("폐의약품 처리 안내 (서산시)")
+st.title("폐의약품 처리 안내")
 
 drug = st.text_input("약 이름 입력")
 
